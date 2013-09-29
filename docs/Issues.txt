@@ -1,0 +1,7 @@
+- In register api, if 'update' is set to 1 then it is posting to his FB stream. (it appears like it was 0 for linked in)
+- postListing - still uses consent_linkedin to checked whether to post to stream
+- user details stored in db indefinitely and not refreshed automatically
+	- need a way to automatically update the db or fetch during the request flow
+
+- Friends api is ready but current not used till it is clear how we are going to use it.
+- Location is ready but not used currently since it is not clear how to get 'nearby ' users.
