@@ -1,0 +1,20 @@
+CREATE TABLE `users` (
+  `user_id` varchar(100) NOT NULL,
+  `username` varchar(200) DEFAULT NULL,
+  `firstname` varchar(200) DEFAULT NULL,
+  `lastname` varchar(200) DEFAULT NULL,
+  `company` varchar(255) DEFAULT NULL,
+  `companyid` int(11) DEFAULT '-1',
+  `city` varchar(100) DEFAULT NULL,
+  `img_url` varchar(500) DEFAULT NULL,
+  `email` varchar(100) DEFAULT NULL,
+  `hobby` varchar(255) DEFAULT NULL,
+  `headline` varchar(255) DEFAULT NULL,
+  `location` varchar(80) DEFAULT NULL,
+  `zip` char(6) DEFAULT NULL,
+  `ccode` char(4) DEFAULT NULL,
+  `activationkey` varchar(100) NOT NULL,
+  `status` tinyint(4) NOT NULL,
+  `mtime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`user_id`)
+) ENGINE=MyISAM DEFAULT CHARSET=latin1
