@@ -1,15 +1,21 @@
 <?php
 
-require_once '/var/www/html/v3.2/php/util.php';
+require_once 'fb_util.php';
+require 'db_config_test.ini';
 require 'ses.php';
 
 abstract class db {
   protected static $dbh = false;
 
   function connect() {
+	global $DB_CONFIG;
 	try {
 
-	self::$dbh = new PDO('mysql:host=cubesales2nd.cu8tvemjyoi1.us-east-1.rds.amazonaws.com;dbname=CubeSalesDb','cubeSalesDbUser','cubeSalesDbUser', array(PDO::MYSQL_ATTR_USE_BUFFERED_QUERY => true, PDO::ATTR_EMULATE_PREPARES => true));
+	self::$dbh = new PDO("mysql:host=".$DB_CONFIG['DB_HOST'].";dbname=".$DB_CONFIG['DB_NAME'],
+						 $DB_CONFIG['DB_USER'],
+						 $DB_CONFIG['DB_PASSWD'],
+						 array(PDO::MYSQL_ATTR_USE_BUFFERED_QUERY => true, 
+							   PDO::ATTR_EMULATE_PREPARES => true));
     self::$dbh->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 	} catch (PDOException $e) {
 		echo "Connection failed :".$e->getMessage();
@@ -42,7 +48,7 @@ class UserDb extends db {
                       ':headline'=>$record['headline'],
                       ':company'=>$record['company'],
                       ':companyid'=>$record['companyid'],
-                      ':city'=>$record['city'],
+                      ':city'=>$record['company_city'],
                       ':zip'=>$record['zip'],
                       ':ccode'=>$record['ccode'],
                       ':email'=>$record['email'],
@@ -433,12 +439,12 @@ class PostingsDb extends db {
 
 		  $comment = "listed an item for $price on Cubesales. Check it out !";
 		  $image_url = $row[0]['photo_url_small'];
-		  $share_content = array ('comment' => "", 
-				  'title' => $comment, 
+		  $share_content = array ('title' => "post title", 
+				  'comment' => $comment, 
 				  'submitted-url' => $prod_url, 
 				  'submitted-image-url' => $image_url, 
 				  'description' => $row[0]['description']);
-		  $response = shareToLinkedInStream("new",$share_content);
+		  $response = shareToFriendStream("new",$share_content);
 		  error_log(" response from share " .print_r($response,true));
 	  }	
 	  $response = array();
@@ -499,14 +505,14 @@ class PostingsDb extends db {
 	//Imp fields extracted
 	$company = isset($user_profile['response_data'][0]['company']) ? $user_profile['response_data'][0]['company'] : false;
 	$location = isset($user_profile['response_data'][0]['city']) ? $user_profile['response_data'][0]['city'] : false; 
-	//error_log("%%%%%%%%%%%%%%%comany = $company and location = $location ");
-	
+
+	/*@todo: currently looking up the company from db and not making a call*/
 	/*First Get the Linkedin user profile to get his latest company*/
-	$user_profile = getLinkedInUserProfileForMobile();
-	//error_log("*****************company = $company and location = $location ");
+	/*$user_profile = getLinkedInUserProfileForMobile();
 	//Imp fields extracted
 	$company = isset($user_profile['company']) ? $user_profile['company'] : false;
 	$location = isset($user_profile['location']) ? $user_profile['location'] : false; 
+	*/
 
     try {
 
@@ -522,7 +528,7 @@ class PostingsDb extends db {
 				break;
 
 			case "myc":
-				$connections = getLinkedinConnectionsForMobile(1000);
+				$connections = getUserFriends(1000);
 				if(empty($connections)) { 
 					return $this->getEmptyResponse();
 				}
@@ -532,7 +538,7 @@ class PostingsDb extends db {
 				break;
 
 			case "mycl":
-				$connections = getLinkedinConnectionsForMobile(1000);
+				$connections = getUserFriends(1000);
 				if(empty($connections)) { 
 					return $this->getEmptyResponse();
 				}
@@ -542,7 +548,7 @@ class PostingsDb extends db {
 				break;
 		
 			case "mycmpc":
-				$connections = getLinkedinConnectionsForMobile(1000);
+				$connections = getUserFriends(1000);
 				if(!empty($connections)) { 
 					$conn_in = "( " . implode(",",$connections). " )";
 				}else {
@@ -703,22 +709,22 @@ class PostingsDb extends db {
 		//check whether we should post in linkedin stream about the registration
 		$consent = isset($record['update']) ? $record['update'] : "1";
 		error_log("consent value is $consent");
-		if($consent == "0") {
-			error_log(" User has given consent to put registration into Linkedin stream ");
+		if($consent == "1") {
+			error_log(" User has given consent to put registration into stream ");
 			$prodLogo = "http://cubesales.com/img/Linkedin_Post.png";
 			$prodUrl  = "http://www.cubesales.com/";
 			$prodDescription = "Build a trusted & convenient marketplace with your colleagues.";
 			//$comment = "started using Cubesales, marketplace app for LinkedIn";
-			$comment = "started using Cubesales! Buy, sell & trade at your workplace with trust & convenience";
+			$comment = "Started using Cubesales Mobile App! Buy, sell & trade at your workplace with trust & convenience";
 			$share_content = array ('comment' => $comment, 
 					'title' => 'Check out Cubesales',
 					'submitted-url' => $prodUrl, 
 					'submitted-image-url' => $prodLogo, 
 					'description' => $prodDescription);
-			$response = shareToLinkedInStream("new",$share_content);
+			$response = shareToFriendStream("new",$share_content);
 
 		}else {
-			error_log(" User has NOT given consent to put registration into Linkedin stream ");
+			error_log(" User has NOT given consent to put registration into stream ");
 		}
 		$response = array();
 		$response['status'] = 1;
