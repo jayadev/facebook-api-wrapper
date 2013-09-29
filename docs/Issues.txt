@@ -5,3 +5,4 @@
 
 - Friends api is ready but current not used till it is clear how we are going to use it.
 - Location is ready but not used currently since it is not clear how to get 'nearby ' users.
+- Activation mail not being send currently.
