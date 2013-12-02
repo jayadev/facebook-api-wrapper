@@ -69,7 +69,7 @@ class UserDb extends db {
 	if(empty($user_id)) return false;
     if(!self::$dbh) $this->connect();
     try {
-	  $stmt = self::$dbh->prepare('SELECT company,city from users where user_id = :user_id');
+	  $stmt = self::$dbh->prepare('SELECT company,city,zip from users where user_id = :user_id');
 	  $params = array(':user_id' => $user_id);
       $stmt->execute($params);
 
@@ -486,6 +486,25 @@ class PostingsDb extends db {
 	  return $response;
   }
 
+  function getUserInfo($args) {
+	$response = array();
+	if(!isset($args['user_id'])) {
+		throw new ErrorException("User id not present");
+	}
+	$u_id = $args['user_id'];
+
+	/*Instead of getting user details from linked in , get it from db instead
+	  This avoids and unnecessary linked in call.
+	  @todo : we need to refresh user's facebook/linked in data somewhere*/
+		$udb = new UserDb();
+		$userInfo = $udb->get_user_details($u_id);	
+		if($userInfo) {
+			$userInfo['response_data'] = $userInfo['response_data'][0];
+		}
+		return $userInfo;
+	}
+
+
   //Only used from mobile app, since the token is obtained from the app
   function getUserListings($args) {
 	$response = array();
@@ -497,7 +516,7 @@ class PostingsDb extends db {
 
 	/*Instead of getting user details from linked in , get it from db instead
 	  This avoids and unnecessary linked in call.
-	  @todo : we need to refresh user's linked in data somewhere*/
+	  @todo : we need to refresh user's facebook/linked in data somewhere*/
 
 	$udb = new UserDb();
 	$user_profile = $udb->get_user_details($u_id);	

@@ -37,7 +37,7 @@ class ApiTest extends PHPUnit_Framework_TestCase {
 		$user_profile = $udb->get_user_details("user_id");
 	}
 
-	public function testSharedStream() {
+	/*public function testSharedStream() {
 		global $API_CONFIG;
 		$input = $this->registerUserParams;
 
@@ -172,6 +172,29 @@ class ApiTest extends PHPUnit_Framework_TestCase {
 		$response = callApiFunction($getListingParams);
 		print_r($response);
 		$this->assertEquals($response['status'],1);
+	}*/
+
+	public function testGetUserInfo() {
+
+		$getUserInfoParams = array( 
+				"fn" => "getUserInfo",
+				"_token" => $this->access_token,
+				"user_id" => "100006561245572"
+				);
+				
+		$response = callApiFunction($getUserInfoParams);
+		$this->assertEquals($response['status'],1);
+		print_r($response);
+		
+		$getUserInfoParams = array( 
+				"fn" => "getUserInfo",
+				"_token" => $this->access_token
+				//"user_id" => "100006561245572"
+				);
+				
+		$response = callApiFunction($getUserInfoParams);
+		$this->assertEquals($response['status'],0);
+
 	}
 
 	private $registerUserParams;
