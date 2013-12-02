@@ -2,6 +2,7 @@
 
 require_once 'fb_util.php';
 require 'db_config_test.ini';
+require 'cb_config_hashes.ini';
 require 'ses.php';
 
 abstract class db {
@@ -39,7 +40,7 @@ class UserDb extends db {
     if(empty($record['user_id'])) return false;
     if(!self::$dbh) $this->connect();
     try {
-      $stmt = self::$dbh->prepare('INSERT INTO users (user_id,username,firstname,lastname,img_url,headline,company,companyid,city,zip,ccode,email,hobby,activationKey,status) VALUES (:user_id,:username,:firstname,:lastname,:img_url,:headline,:company,:companyid,:city,:zip,:ccode,:email,:hobby,:activationKey,:status) ON DUPLICATE KEY UPDATE user_id=:user_id,username=:username,firstname=:firstname,lastname=:lastname,img_url=:img_url,headline=:headline,company=:company,companyid=:companyid,city=:city,zip=:zip,ccode=:ccode,email=:email');
+      $stmt = self::$dbh->prepare('INSERT INTO users (user_id,username,firstname,lastname,img_url,headline,company,companyid,company_email,city,zip,ccode,email,hobby,activationKey,status) VALUES (:user_id,:username,:firstname,:lastname,:img_url,:headline,:company,:companyid,:company_email,:city,:zip,:ccode,:email,:hobby,:activationKey,:status) ON DUPLICATE KEY UPDATE user_id=:user_id,username=:username,firstname=:firstname,lastname=:lastname,img_url=:img_url,headline=:headline,company=:company,companyid=:companyid,company_email=:company_email,city=:city,zip=:zip,ccode=:ccode,email=:email');
       $params = array(':user_id'=>$record['user_id'],
                       ':username'=>$record['username'],
                       ':firstname'=>$record['firstname'],
@@ -48,6 +49,7 @@ class UserDb extends db {
                       ':headline'=>$record['headline'],
                       ':company'=>$record['company'],
                       ':companyid'=>$record['companyid'],
+                      ':company_email'=>$record['company_email'],
                       ':city'=>$record['company_city'],
                       ':zip'=>$record['zip'],
                       ':ccode'=>$record['ccode'],
@@ -69,7 +71,7 @@ class UserDb extends db {
 	if(empty($user_id)) return false;
     if(!self::$dbh) $this->connect();
     try {
-	  $stmt = self::$dbh->prepare('SELECT company,city,zip from users where user_id = :user_id');
+	  $stmt = self::$dbh->prepare('SELECT companyid,city,zip from users where user_id = :user_id');
 	  $params = array(':user_id' => $user_id);
       $stmt->execute($params);
 
@@ -422,8 +424,8 @@ class PostingsDb extends db {
       $stmt->execute($params);
 
 	  //Now that we have inserted the item into db we will post in his linkedin stream about the product details
-	  $consent = isset($record['consent_linkedin']) ? $record['consent_linkedin'] : "0";
-      error_log("consent_linkedin value is $consent");
+	  $consent = isset($record['consent_fb']) ? $record['consent_fb'] : "0";
+      error_log("consent_fb value is $consent");
 	  if($consent == "1") {
 		  $result = self::$dbh->query("SELECT * from postings where postings.id = LAST_INSERT_ID()");
 		  $row = $result->fetchAll(PDO::FETCH_ASSOC);
@@ -487,6 +489,8 @@ class PostingsDb extends db {
   }
 
   function getUserInfo($args) {
+	global $COMPANY_NAMES_MAPPING;
+
 	$response = array();
 	if(!isset($args['user_id'])) {
 		throw new ErrorException("User id not present");
@@ -500,6 +504,12 @@ class PostingsDb extends db {
 		$userInfo = $udb->get_user_details($u_id);	
 		if($userInfo) {
 			$userInfo['response_data'] = $userInfo['response_data'][0];
+			$companyId = $userInfo['response_data']['companyid'];
+			if(array_key_exists($companyId,$COMPANY_NAMES_MAPPING)) {
+				$userInfo['response_data']['company'] = $COMPANY_NAMES_MAPPING[$companyId];
+			} else {
+				$userInfo['response_data']['company'] = $companyId;
+			}
 		}
 		return $userInfo;
 	}
@@ -702,9 +712,24 @@ class PostingsDb extends db {
 	return $this->registerUserTestLog($record); 
  }
 
+ function extractEmailDomain($emailId) {
+	 global $BLACKLIST_EMAIL_DOMAINS;
+	 // Make sure the address is valid
+	 if (filter_var($emailId, FILTER_VALIDATE_EMAIL)) {
+		 $extendedDomain = array_pop(explode('@', $emailId));
+		 $domain = reset(explode('.',$extendedDomain));
+
+		 if (in_array($domain, $BLACKLIST_EMAIL_DOMAINS)) {
+			return false; 
+		 }
+		 return $domain;
+	 }
+	 return false;
+ }
+
  function registerUser($record) {
-	if(empty($record['user_id'])) {
-		throw new ErrorException("User id not present");
+	if(empty($record['user_id']) || empty($record['company_email'])) {
+		throw new ErrorException("User id / company_email  not present");
 	}
 	//Create the activate key for the user
 	$activationKey =  mt_rand() . mt_rand() . mt_rand();
@@ -718,7 +743,14 @@ class PostingsDb extends db {
 	if(!isset($record['zip'])) { $record['zip'] = '94086'; }
 	if(!isset($record['ccode'])) { $record['ccode'] = 'US'; }
 	if(!isset($record['hobby'])) { $record['hobby'] = '';}
-	if(empty($record['companyid'])) { $record['companyid'] = '-1';}
+
+	//Extract company email domain to be used as company id
+	if(! ($companyId = $this->extractEmailDomain($record['company_email']))) {
+		throw new ErrorException("Company email domain not valid");
+	}
+	$record['companyid'] = $companyId;
+	$record['company'] = ''; //Currently company name is not passed in
+
 	error_log(print_r($record,true));
 	$status = $udb->save($record);
 

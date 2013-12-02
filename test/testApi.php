@@ -26,9 +26,8 @@ class ApiTest extends PHPUnit_Framework_TestCase {
 			 "company_zip" => "94115",
 			 "company_city" => "San Francisco",
 			 "company_ccode" => "US",
-			 "company" => "Microsoft",
 			 "headline" => "Senior Software Developer",
-			 "update" => "1",
+			 "update" => "0",
 			);
 	}
 
@@ -58,25 +57,40 @@ class ApiTest extends PHPUnit_Framework_TestCase {
 		
 		$response = shareToFriendStream("new",$share_content);
 		print_r($response);
-	}
+	}*/
 
 
 	public function testRegisterUser() {
 		$input = $this->registerUserParams;
-		$this->assertEquals(16,count($input));
+		$this->assertEquals(15,count($input));
 	
 		//Make sure registration requires user_id
 		unset($input['user_id']);
 		$response = callApiFunction($input);
 		$this->assertEquals($response['status'],0);
-		$this->assertEquals($response['error_desc'],"User id not present");
+		$this->assertEquals($response['error_desc'],"User id / company_email  not present");
 	
+	    //Make sure registration requires company_email 
+		$input = $this->registerUserParams;
+		unset($input['company_email']);
+		$response = callApiFunction($input);
+		$this->assertEquals($response['status'],0);
+		$this->assertEquals($response['error_desc'],"User id / company_email  not present");
+	
+		//Wrong email id
+		$input = $this->registerUserParams;
+		$input['company_email'] = "blah";
+		$response = callApiFunction($input);
+		$this->assertEquals($response['status'],0);
+		$this->assertEquals($response['error_desc'],"Company email domain not valid");
+		
+		
 		$input = $this->registerUserParams;
 		$response = callApiFunction($input);
 		$this->assertEquals($response['status'],1);
 	}
 
-	public function testPostListing() {
+	/*public function testPostListing() {
 		$postListingParams = array (
 				"fn" => "postListing",
 				"_token" => $this->access_token,
