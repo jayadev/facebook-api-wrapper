@@ -83,6 +83,7 @@ class ApiTest extends PHPUnit_Framework_TestCase {
 		$response = callApiFunction($input);
 		$this->assertEquals($response['status'],0);
 		$this->assertEquals($response['error_desc'],"Company email domain not valid");
+		print_r($response);
 		
 		
 		$input = $this->registerUserParams;
@@ -168,7 +169,7 @@ class ApiTest extends PHPUnit_Framework_TestCase {
 		print_r($response);
 		//$this->assertEquals($response['id'],"100006561245572");
 		//$this->assertEquals($response['name'],"Manoj Kumar");
-	}
+	}*/
 
 	public function testGetUserListing() {
 
@@ -182,11 +183,11 @@ class ApiTest extends PHPUnit_Framework_TestCase {
 		$response = callApiFunction($getListingParams);
 		$this->assertEquals($response['status'],1);
 	
-		$getListingParams['filter_type'] = "mycmpl";
+		$getListingParams['filter_type'] = "myl";
 		$response = callApiFunction($getListingParams);
 		print_r($response);
 		$this->assertEquals($response['status'],1);
-	}*/
+	}
 
 	public function testGetUserInfo() {
 
@@ -198,7 +199,7 @@ class ApiTest extends PHPUnit_Framework_TestCase {
 				
 		$response = callApiFunction($getUserInfoParams);
 		$this->assertEquals($response['status'],1);
-		print_r($response);
+		//print_r($response);
 		
 		$getUserInfoParams = array( 
 				"fn" => "getUserInfo",

@@ -532,7 +532,7 @@ class PostingsDb extends db {
 	$user_profile = $udb->get_user_details($u_id);	
 
 	//Imp fields extracted
-	$company = isset($user_profile['response_data'][0]['company']) ? $user_profile['response_data'][0]['company'] : false;
+	$company = isset($user_profile['response_data'][0]['companyid']) ? $user_profile['response_data'][0]['companyid'] : false;
 	$location = isset($user_profile['response_data'][0]['city']) ? $user_profile['response_data'][0]['city'] : false; 
 
 	/*@todo: currently looking up the company from db and not making a call*/
@@ -553,7 +553,7 @@ class PostingsDb extends db {
 		switch($filter_type) {
 
 			case "my":
-				$result = self::$dbh->query("SELECT  p.*,u.user_id,u.username,u.company,u.img_url,u.headline,u.city from postings as p,users as u where u.user_id = p.user_id and u.user_id = $u_id and p.posting_status != 2 order by p.mtime desc");
+				$result = self::$dbh->query("SELECT  p.*,u.user_id,u.username,u.companyid,u.img_url,u.headline,u.city from postings as p,users as u where u.user_id = p.user_id and u.user_id = $u_id and p.posting_status != 2 order by p.mtime desc");
 				break;
 
 			case "myc":
@@ -595,10 +595,18 @@ class PostingsDb extends db {
 				break;
 
 			//Currently it has just company listings , location too restrictive
-			case "mycmpl":
-				$query = "SELECT p.*,u.user_id,u.username,u.company,u.img_url,u.city ".
+			case "mycmp":
+				$query = "SELECT p.*,u.user_id,u.username,u.companyid,u.img_url,u.city ".
 						 "FROM postings as p,users as u ".
-						 "WHERE u.company = $company and u.user_id = p.user_id and p.posting_status != 2 ".
+						 "WHERE u.companyid = $company and u.user_id = p.user_id and p.posting_status != 2 ".
+						 "ORDER BY p.mtime desc";
+				$result = self::$dbh->query($query);
+				break;
+
+			case "myl":
+				$query = "SELECT p.*,u.user_id,u.username,u.companyid,u.img_url,u.city ".
+						 "FROM postings as p,users as u ".
+						 "WHERE u.city = $location and u.user_id = p.user_id and p.posting_status != 2 ".
 						 "ORDER BY p.mtime desc";
 				$result = self::$dbh->query($query);
 				break;
@@ -613,7 +621,7 @@ class PostingsDb extends db {
 
 			//default should be my company
 			default :
-				$result = self::$dbh->query("SELECT p.*,u.user_id,u.username,u.company,u.img_url,u.city from postings as p,users as u where u.user_id = p.user_id and p.posting_status != 2 order by p.mtime desc");
+				$result = self::$dbh->query("SELECT p.*,u.user_id,u.username,u.company,u.img_url,u.city from postings as p,users as u where u.companyid = $company and u.user_id = p.user_id and p.posting_status != 2 order by p.mtime desc");
 		}
 
 		$row = $result->fetchAll(PDO::FETCH_ASSOC);
