@@ -185,7 +185,7 @@ class ApiTest extends PHPUnit_Framework_TestCase {
 	
 		$getListingParams['filter_type'] = "myl";
 		$response = callApiFunction($getListingParams);
-		print_r($response);
+		//print_r($response);
 		$this->assertEquals($response['status'],1);
 	}
 

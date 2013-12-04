@@ -553,7 +553,7 @@ class PostingsDb extends db {
 		switch($filter_type) {
 
 			case "my":
-				$result = self::$dbh->query("SELECT  p.*,u.user_id,u.username,u.companyid,u.img_url,u.headline,u.city from postings as p,users as u where u.user_id = p.user_id and u.user_id = $u_id and p.posting_status != 2 order by p.mtime desc");
+				$result = self::$dbh->query("SELECT  p.*,u.user_id,u.username,u.companyid as company,u.img_url,u.headline,u.city from postings as p,users as u where u.user_id = p.user_id and u.user_id = $u_id and p.posting_status != 2 order by p.mtime desc");
 				break;
 
 			case "myc":
@@ -596,7 +596,7 @@ class PostingsDb extends db {
 
 			//Currently it has just company listings , location too restrictive
 			case "mycmp":
-				$query = "SELECT p.*,u.user_id,u.username,u.companyid,u.img_url,u.city ".
+				$query = "SELECT p.*,u.user_id,u.username,u.companyid as company,u.img_url,u.city ".
 						 "FROM postings as p,users as u ".
 						 "WHERE u.companyid = $company and u.user_id = p.user_id and p.posting_status != 2 ".
 						 "ORDER BY p.mtime desc";
@@ -604,7 +604,7 @@ class PostingsDb extends db {
 				break;
 
 			case "myl":
-				$query = "SELECT p.*,u.user_id,u.username,u.companyid,u.img_url,u.city ".
+				$query = "SELECT p.*,u.user_id,u.username,u.companyid as company,u.img_url,u.city ".
 						 "FROM postings as p,users as u ".
 						 "WHERE u.city = $location and u.user_id = p.user_id and p.posting_status != 2 ".
 						 "ORDER BY p.mtime desc";
