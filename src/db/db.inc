@@ -71,7 +71,7 @@ class UserDb extends db {
 	if(empty($user_id)) return false;
     if(!self::$dbh) $this->connect();
     try {
-	  $stmt = self::$dbh->prepare('SELECT companyid,city,zip from users where user_id = :user_id');
+	  $stmt = self::$dbh->prepare('SELECT companyid,city,zip,status as verified from users where user_id = :user_id');
 	  $params = array(':user_id' => $user_id);
       $stmt->execute($params);
 
