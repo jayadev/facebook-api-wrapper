@@ -511,6 +511,8 @@ class PostingsDb extends db {
 				$userInfo['response_data']['company'] = $companyId;
 			}
 		}
+		//Mark all users as verified till email is fixed
+		$userInfo['response_data']['verified'] = "1";
 		return $userInfo;
 	}
 
